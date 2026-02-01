@@ -1,0 +1,780 @@
+<!-- 
+  =======================================================================
+  PROJECT: BLOB MOB INFINITY
+  DEVELOPER: GEN SOLUTION
+  LOCATION:  INDIA
+  YEAR: 2026
+  
+  COPYRIGHT (C) 2026 GEN SOLUTION. ALL RIGHTS RESERVED.
+  
+  NOTICE:
+  This software is the proprietary intellectual property of Gen Solution.
+  Unauthorized copying, distribution, modification, or sale of this 
+  software code or its assets is strictly prohibited.
+  
+  LICENSED FOR DISTRIBUTION ON:
+  - GameSnacks
+  - YouTube Playables
+  - Google Play Instant
+  =======================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blob Mob Infinity - Gen Solution</title>
+    <meta name="description" content="Infinite crowd runner with upgrades. Gen Solution Edition.">
+    <meta name="author" content="Gen Solution">
+    <meta name="copyright" content="Gen Solution 2026">
+    <meta name="theme-color" content="#00c6ff">
+    
+    <!-- GEN SOLUTION: Uncomment for production -->
+    <!-- <script src="https://www.youtube.com/game_api/v1"></script> -->
+
+    <style>
+        /* --- RESET & BASE --- */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #00c6ff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        canvas {
+            display: block;
+        }
+
+        /* --- UI LAYER --- */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- HUD --- */
+        .hud-top {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 15px;
+            box-sizing: border-box;
+            z-index: 20;
+        }
+
+        .hud-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: #333;
+            font-weight: 900;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            border: 2px solid #fff;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hud-column {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .text-level { color: #ff0055; }
+        .text-blue { color: #0072ff; }
+        .text-gold { color: #d4a000; }
+
+        /* --- SCREENS --- */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 30;
+            transition: opacity 0.3s ease;
+        }
+
+        .title-hero {
+            font-size: 48px;
+            font-weight: 900;
+            color: #0072ff;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px #fff, 4px 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            line-height: 1;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #555;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            max-width: 80%;
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            background: linear-gradient(180deg, #ffdd00, #ffaa00);
+            color: white;
+            padding: 18px 50px;
+            border: 4px solid #fff;
+            border-radius: 50px;
+            font-size: 22px;
+            font-weight: 900;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 10px 20px rgba(255, 170, 0, 0.4);
+            transition: transform 0.1s;
+            text-transform: uppercase;
+            margin: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            min-width: 200px;
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn-green { background: linear-gradient(180deg, #00dd00, #00aa00); box-shadow: 0 10px 20px rgba(0, 170, 0, 0.4); }
+        .btn-red { background: linear-gradient(180deg, #ff5555, #ff0000); box-shadow: 0 10px 20px rgba(255, 0, 0, 0.4); }
+        .btn-purple { background: linear-gradient(180deg, #aa00ff, #7700ff); box-shadow: 0 10px 20px rgba(100, 0, 255, 0.4); font-size: 16px; padding: 15px 30px;}
+        .btn-blue { background: linear-gradient(180deg, #00c6ff, #0072ff); box-shadow: 0 10px 20px rgba(0, 100, 255, 0.4); }
+
+        /* --- SHOP MODAL --- */
+        #shop-modal {
+            background: #fff;
+            border: 4px solid #0072ff;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 30px;
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            background: #f0f8ff;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .shop-info { text-align: left; }
+        .shop-title { font-weight: 900; color: #333; font-size: 16px; }
+        .shop-desc { font-size: 12px; color: #777; }
+        
+        .upgrade-btn {
+            background: #00dd00;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #009900;
+            transition: all 0.1s;
+        }
+        .upgrade-btn:active { transform: translateY(4px); box-shadow: none; }
+        .upgrade-btn.disabled { background: #ccc; box-shadow: none; pointer-events: none; }
+
+        /* --- BRANDING --- */
+        .brand {
+            position: absolute;
+            bottom: 20px;
+            font-size: 12px;
+            color: #555;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <!-- HUD -->
+    <div class="hud-top hidden" id="game-hud">
+        <div class="hud-box text-level" id="levelDisplay">LVL 1</div>
+        <div class="hud-column">
+            <div class="hud-box text-blue">ARMY: <span id="armyCount" style="margin-left:5px">0</span></div>
+            <div class="hud-box text-gold">💰 <span id="coinDisplay" style="margin-left:5px">0</span></div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- START MENU -->
+        <div id="start-screen" class="screen">
+            <div class="title-hero">BLOB<br>MOB</div>
+            <div class="subtitle"> INFINITY EDITION • GEN SOLUTION<br>UPGRADE & CONQUER</div>
+            <button class="btn" id="startBtn">START RUN</button>
+            <button class="btn btn-blue" id="shopBtn">🛒 UPGRADES</button>
+            <div class="brand">© 2026 GEN SOLUTION</div>
+        </div>
+        
+        <!-- SHOP MODAL -->
+        <div id="shop-screen" class="screen hidden">
+            <div id="shop-modal">
+                <div class="title-hero" style="font-size: 28px; margin-bottom: 5px; color:#0072ff">MACHINE SHOP</div>
+                <div style="color: #666; font-size: 14px; margin-bottom: 15px;">COINS: <span id="shopCoinDisplay" style="color:#d4a000; font-weight:bold">0</span></div>
+                
+                <!-- Items -->
+                <div class="shop-item">
+                    <div class="shop-info">
+                        <div class="shop-title">FIRE RATE</div>
+                        <div class="shop-desc">Shoot blobs faster</div>
+                    </div>
+                    <button class="upgrade-btn" id="buyFireRate">100 💰</button>
+                </div>
+
+                <div class="shop-item">
+                    <div class="shop-info">
+                        <div class="shop-title">BLOB SPEED</div>
+                        <div class="shop-desc">Army moves quicker</div>
+                    </div>
+                    <button class="upgrade-btn" id="buySpeed">150 💰</button>
+                </div>
+
+                <div class="shop-item">
+                    <div class="shop-info">
+                        <div class="shop-title">INCOME</div>
+                        <div class="shop-desc">More coins per win</div>
+                    </div>
+                    <button class="upgrade-btn" id="buyIncome">200 💰</button>
+                </div>
+
+                <button class="btn" style="background: transparent; border:none; box-shadow: none; color: #999; font-size: 14px; margin-top:10px" id="shopCloseBtn">CLOSE</button>
+            </div>
+        </div>
+
+        <!-- GAME OVER -->
+        <div id="game-over-screen" class="screen hidden">
+            <div class="title-hero" style="color: #ff0055">DEFEATED</div>
+            <div class="subtitle">EARNED <span id="loseCoins">0</span> COINS</div>
+            <button class="btn btn-red" id="restartBtn">RETRY</button>
+            <button class="btn btn-blue" id="shopBtnLose">🛒 UPGRADES</button>
+        </div>
+
+        <!-- WIN SCREEN -->
+        <div id="win-screen" class="screen hidden">
+            <div class="title-hero" style="color: #00dd00">VICTORY!</div>
+            <div class="subtitle">EARNED <span id="winCoins">0</span> COINS</div>
+            <button class="btn btn-green" id="nextLevelBtn">NEXT LEVEL >></button>
+            <button class="btn btn-blue" id="shopBtnWin">🛒 UPGRADES</button>
+        </div>
+    </div>
+
+<script>
+/**
+ * GEN SOLUTION - INFINITY EDITION
+ * Copyright (c) 2026 Gen Solution
+ * * PROPRIETARY LICENSE:
+ * This code is the property of Gen Solution. Unauthorized use,
+ * duplication, or distribution without express written permission 
+ * is strictly prohibited.
+ */
+
+const apiKey = ""; 
+
+// --- ENGINE SETUP ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+// --- GAME STATE & UPGRADES ---
+let coins = 0;
+let level = 1;
+
+// Upgrade State
+let upgrades = {
+    fireRate: 1, // Reduces spawn delay
+    speed: 1,    // Increases mob speed
+    income: 1    // Multiplies coin gain
+};
+
+// Costs
+const COSTS = {
+    fireRate: (lvl) => 100 * lvl,
+    speed: (lvl) => 150 * lvl,
+    income: (lvl) => 200 * lvl
+};
+
+// Configuration
+let CONFIG = {
+    baseSpawnRate: 8,
+    baseMobSpeed: 4.5,
+    playerSpeed: 0.15, 
+    enemySpeed: 2.2, // Base enemy speed
+    colors: {
+        bgTop: '#00c6ff', bgBot: '#ffffff',
+        floor1: '#f0f8ff', floor2: '#dceeff',
+        friend: '#ffcc00', enemy: '#cc00cc',
+        gateGood: '#00dd00', gateBad: '#ff0000'
+    }
+};
+
+let gameState = 'MENU';
+let width, height;
+let frame = 0;
+let bgOffset = 0;
+let bgGradient = null;
+
+// Entities
+let playerX = 0;
+let targetX = 0;
+let mobs = [];
+let enemies = [];
+let gates = [];
+let particles = [];
+let enemyBase = { hp: 100, maxHp: 100, y: 0 };
+let levelReward = 0;
+
+// --- INITIALIZATION ---
+window.addEventListener('load', () => {
+    resize();
+    initLevel(1); 
+    updateShopUI();
+    requestAnimationFrame(draw);
+});
+
+function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    if(gameState === 'MENU') {
+        playerX = width / 2;
+        targetX = width / 2;
+    }
+    bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+    bgGradient.addColorStop(0, CONFIG.colors.bgTop);
+    bgGradient.addColorStop(1, CONFIG.colors.bgBot);
+}
+window.addEventListener('resize', resize);
+
+// --- INPUT ---
+function handleInput(x) {
+    targetX = x;
+    if(targetX < 40) targetX = 40;
+    if(targetX > width - 40) targetX = width - 40;
+}
+window.addEventListener('mousemove', e => { if(gameState === 'PLAYING') handleInput(e.clientX); });
+window.addEventListener('touchmove', e => { 
+    if(gameState === 'PLAYING') { e.preventDefault(); handleInput(e.touches[0].clientX); } 
+}, {passive: false});
+
+// --- LEVEL GENERATION (INFINITE SCALING) ---
+function initLevel(lvl) {
+    mobs = [];
+    enemies = [];
+    particles = [];
+    gates = [];
+    frame = 0;
+    
+    // DIFFICULTY SCALING
+    // HP scales exponentially
+    const hp = Math.floor(100 + (lvl * 50) + Math.pow(lvl, 1.2) * 10);
+    enemyBase = {
+        hp: hp,
+        maxHp: hp,
+        y: 80, w: 140, h: 60
+    };
+
+    // Enemy Speed scales linearly
+    CONFIG.enemySpeed = 2.0 + (lvl * 0.1); 
+    if(CONFIG.enemySpeed > 5) CONFIG.enemySpeed = 5; // Cap speed
+
+    const yStart = height - 350;
+    
+    // PROCEDURAL GATE GENERATION
+    if (lvl === 1) {
+        // Tutorial Level
+        gates.push({ x: width*0.25, y: yStart, w: width*0.22, h: 60, type: 'mult', val: 2, vx: 0.5 });
+        gates.push({ x: width*0.75, y: yStart, w: width*0.22, h: 60, type: 'mult', val: 3, vx: -0.5 });
+    } else {
+        // Infinite Generation
+        const rowCount = Math.min(3, 1 + Math.floor(lvl / 3)); // More rows as you advance
+        
+        for(let r=0; r<rowCount; r++) {
+            const rowY = yStart - (r * 250);
+            const gateCount = 2 + (r % 2); // 2 or 3 gates per row
+            
+            for(let i=0; i<gateCount; i++) {
+                const isBad = Math.random() < (0.1 + (lvl * 0.02)); // Chance of bad gate increases
+                const type = (Math.random() > 0.5 && !isBad) ? 'mult' : 'add';
+                
+                // Value scaling
+                let val;
+                if(type === 'mult') val = 2 + Math.floor(Math.random() * (1 + lvl/5));
+                else val = 5 + Math.floor(Math.random() * (10 + lvl * 2));
+                
+                // Bad gate logic
+                if(isBad) {
+                    val = -val; // Negative value
+                }
+
+                gates.push({
+                    x: (width / (gateCount+1)) * (i+1),
+                    y: rowY,
+                    w: width * (0.8 / gateCount),
+                    h: 60,
+                    type: type,
+                    val: val,
+                    vx: (Math.random() - 0.5) * (1 + lvl * 0.2) // Speed increases
+                });
+            }
+        }
+    }
+}
+
+// --- SHOP LOGIC ---
+function updateShopUI() {
+    document.getElementById('shopCoinDisplay').innerText = coins;
+    document.getElementById('coinDisplay').innerText = coins;
+
+    // Fire Rate
+    const cFire = COSTS.fireRate(upgrades.fireRate);
+    const btnFire = document.getElementById('buyFireRate');
+    btnFire.innerText = `Lvl ${upgrades.fireRate} - ${cFire}💰`;
+    btnFire.className = coins >= cFire ? 'upgrade-btn' : 'upgrade-btn disabled';
+
+    // Speed
+    const cSpeed = COSTS.speed(upgrades.speed);
+    const btnSpeed = document.getElementById('buySpeed');
+    btnSpeed.innerText = `Lvl ${upgrades.speed} - ${cSpeed}💰`;
+    btnSpeed.className = coins >= cSpeed ? 'upgrade-btn' : 'upgrade-btn disabled';
+
+    // Income
+    const cInc = COSTS.income(upgrades.income);
+    const btnInc = document.getElementById('buyIncome');
+    btnInc.innerText = `Lvl ${upgrades.income} - ${cInc}💰`;
+    btnInc.className = coins >= cInc ? 'upgrade-btn' : 'upgrade-btn disabled';
+}
+
+function buyUpgrade(type) {
+    const cost = COSTS[type](upgrades[type]);
+    if(coins >= cost) {
+        coins -= cost;
+        upgrades[type]++;
+        updateShopUI();
+    }
+}
+
+// Apply Upgrades to Gameplay Stats
+function getEffectiveStats() {
+    // Fire Rate: Lower spawnRate is better. Base 8, min 2.
+    // Each level reduces delay by 0.5
+    const spawnRate = Math.max(2, CONFIG.baseSpawnRate - (upgrades.fireRate - 1) * 0.5);
+    
+    // Speed: Base 4.5, +0.2 per level
+    const mobSpeed = CONFIG.baseMobSpeed + (upgrades.speed - 1) * 0.5;
+
+    return { spawnRate, mobSpeed };
+}
+
+
+// --- UPDATE LOOP ---
+function update() {
+    if(gameState !== 'PLAYING') return;
+    frame++;
+    bgOffset += 4; 
+
+    const stats = getEffectiveStats();
+
+    playerX += (targetX - playerX) * CONFIG.playerSpeed;
+
+    // Player Spawn (With Upgraded Rate)
+    // Using simple modulo logic, might need floor for non-integers
+    if(frame % Math.floor(stats.spawnRate) === 0) {
+        mobs.push(createMob(playerX, height - 100, false));
+    }
+
+    // Enemy Spawn (Waves increase with Level)
+    const waveRate = Math.max(15, 60 - (level * 2));
+    if(frame % waveRate === 0) {
+        // Spawn multiple enemies at higher levels
+        const count = 1 + Math.floor(level / 5);
+        for(let i=0; i<count; i++) {
+             enemies.push(createMob(width/2 + (Math.random()-0.5)*120, enemyBase.y + 60, true));
+        }
+    }
+
+    // Move Gates
+    gates.forEach(g => {
+        g.x += g.vx;
+        if(g.x > width - g.w/2 || g.x < g.w/2) g.vx *= -1;
+    });
+
+    // Mobs Logic
+    for(let i = mobs.length - 1; i >= 0; i--) {
+        let m = mobs[i];
+        m.y -= stats.mobSpeed;
+        m.x += m.vx;
+        m.anim += 0.2;
+
+        // Gate Logic
+        let hitGate = false;
+        for (let g of gates) {
+            if (m.y < g.y + g.h/2 && m.y > g.y - g.h/2 && m.x > g.x - g.w/2 && m.x < g.x + g.w/2 && m.y > g.y) {
+                hitGate = true;
+                
+                // Logic for Negative/Positive gates
+                if (g.val > 0) {
+                    // Positive: Multiply or Add
+                    let count = (g.type === 'mult') ? (g.val - 1) : g.val;
+                    count = Math.min(count, 50); // Cap
+                    for(let k=0; k<count; k++) mobs.push(createMob(m.x, m.y - 20, false));
+                    if(particles.length < 50) createParticle(g.x, g.y, '#fff', 2);
+                } else {
+                    // Negative: Kill mobs
+                    // We remove THIS mob, plus maybe more if value is very negative?
+                    // For simplicity in this engine, negative gate just kills the passing mob
+                    // To make it harder, maybe a negative gate has a 'counter' but here we just kill the toucher.
+                    // Visual effect: Red particles
+                     if(particles.length < 50) createParticle(g.x, g.y, '#f00', 2);
+                }
+                break;
+            }
+        }
+        
+        if(hitGate) m.y -= 30; // Push past gate
+
+        // Combat
+        let hitEnemy = false;
+        for(let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+            let e = enemies[eIdx];
+            if(Math.hypot(m.x - e.x, m.y - e.y) < 15) {
+                hitEnemy = true;
+                enemies.splice(eIdx, 1);
+                // Coin Chance on kill
+                if(Math.random() < 0.1) coins += (1 * upgrades.income);
+                
+                if(particles.length < 50) particles.push(createParticle(m.x, m.y, '#fff'));
+                break;
+            }
+        }
+
+        // Base Damage
+        if(m.y < enemyBase.y + enemyBase.h && Math.abs(m.x - width/2) < enemyBase.w/2 + 20) {
+            enemyBase.hp--;
+            hitEnemy = true;
+            // Coin Chance on Damage
+            if(Math.random() < 0.3) coins += (1 * upgrades.income);
+
+            if(enemyBase.hp <= 0) {
+                // WIN
+                gameState = 'WIN';
+                // Level Completion Reward
+                levelReward = 50 + (level * 10) * upgrades.income;
+                coins += levelReward;
+                
+                document.getElementById('winCoins').innerText = levelReward;
+                document.getElementById('coinDisplay').innerText = coins;
+                
+                spawnConfetti();
+                document.getElementById('win-screen').classList.remove('hidden');
+                document.getElementById('game-hud').classList.add('hidden');
+            }
+        }
+
+        if(hitEnemy || m.y < -50) mobs.splice(i, 1);
+    }
+
+    // Enemies Logic
+    for(let i = enemies.length - 1; i >= 0; i--) {
+        let e = enemies[i];
+        e.y += CONFIG.enemySpeed;
+        e.x += e.vx;
+        e.anim += 0.2;
+
+        if(e.y > height - 50) {
+            // LOSE
+            gameState = 'GAMEOVER';
+            levelReward = Math.floor((10 + level) * upgrades.income); // Pity coins
+            coins += levelReward;
+            
+            document.getElementById('loseCoins').innerText = levelReward;
+            document.getElementById('coinDisplay').innerText = coins;
+            
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            document.getElementById('game-hud').classList.add('hidden');
+        }
+    }
+
+    // Particles
+    for(let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if(p.life <= 0) particles.splice(i, 1);
+    }
+
+    document.getElementById('armyCount').innerText = mobs.length;
+    document.getElementById('coinDisplay').innerText = Math.floor(coins);
+}
+
+// --- RENDERING & FACTORIES (Same as previous, omitted for brevity but included in file) ---
+function createMob(x, y, isEnemy) {
+    return { x: x + (Math.random()-0.5)*20, y: y, vx: (Math.random()-0.5)*1.5, radius: 6, isEnemy: isEnemy, anim: Math.random()*10 };
+}
+function createParticle(x, y, color, speed=1) {
+    const a = Math.random()*Math.PI*2, v = Math.random()*5*speed;
+    return { x:x, y:y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:1.0, color:color, decay:0.02+Math.random()*0.03 };
+}
+function spawnConfetti() { for(let i=0; i<60; i++) particles.push(createParticle(width/2, height/2, `hsl(${Math.random()*360}, 100%, 50%)`, 3)); }
+
+function drawStickman(x, y, isEnemy, anim) {
+    const color = isEnemy ? CONFIG.colors.enemy : CONFIG.colors.friend;
+    const legSwing = Math.sin(anim) * 5;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y - 5, 8, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - 4, y + 2); ctx.lineTo(x - 5, y + 10 + legSwing);
+    ctx.moveTo(x + 4, y + 2); ctx.lineTo(x + 5, y + 10 - legSwing);
+    ctx.moveTo(x - 6, y - 5); ctx.lineTo(x - 10, y + legSwing);
+    ctx.moveTo(x + 6, y - 5); ctx.lineTo(x + 10, y - legSwing);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.arc(x - 3, y - 8, 2, 0, Math.PI*2); ctx.fill();
+}
+
+function draw() {
+    if(!width || !height) return requestAnimationFrame(draw);
+    if(bgGradient) { ctx.fillStyle = bgGradient; ctx.fillRect(0, 0, width, height); }
+    
+    // Floor
+    const gridSize = 80;
+    const offsetY = bgOffset % (gridSize * 2);
+    for(let y = -gridSize; y < height; y += gridSize) {
+        const adjustedY = y + offsetY;
+        if(adjustedY > -gridSize && adjustedY < height) {
+            const isStripe = Math.floor((y + bgOffset) / gridSize) % 2 === 0;
+            ctx.fillStyle = isStripe ? CONFIG.colors.floor1 : CONFIG.colors.floor2;
+            ctx.fillRect(0, adjustedY, width, gridSize);
+        }
+    }
+
+    // Gates
+    gates.forEach(g => {
+        const isGood = g.val > 0;
+        const color = isGood ? CONFIG.colors.gateGood : CONFIG.colors.gateBad;
+        
+        ctx.fillStyle = isGood ? 'rgba(0, 221, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)';
+        ctx.fillRect(g.x - g.w/2, g.y - g.h/2, g.w, g.h);
+        ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.strokeRect(g.x - g.w/2, g.y - g.h/2, g.w, g.h);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(g.x - g.w/2 - 5, g.y - g.h/2 - 10, 10, g.h + 20);
+        ctx.fillRect(g.x + g.w/2 - 5, g.y - g.h/2 - 10, 10, g.h + 20);
+
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        let emoji = isGood ? '😇' : '😈';
+        let txt = g.type === 'mult' ? "×" + Math.abs(g.val) : ((g.val > 0 ? "+" : "") + g.val);
+        
+        ctx.font = '40px Arial'; ctx.fillText(emoji, g.x, g.y - 15);
+        ctx.fillStyle = color; ctx.font = '900 28px Arial'; ctx.lineWidth = 2; ctx.strokeStyle = 'white';
+        ctx.strokeText(txt, g.x, g.y + 20); ctx.fillText(txt, g.x, g.y + 20);
+    });
+
+    // Base
+    ctx.fillStyle = '#440044'; ctx.fillRect(width/2 - enemyBase.w/2, enemyBase.y, enemyBase.w, enemyBase.h);
+    const hpPercent = Math.max(0, enemyBase.hp / enemyBase.maxHp);
+    ctx.fillStyle = '#333'; ctx.fillRect(width/2 - enemyBase.w/2, enemyBase.y - 25, enemyBase.w, 12);
+    ctx.fillStyle = hpPercent > 0.5 ? '#00dd00' : '#dd0000'; ctx.fillRect(width/2 - enemyBase.w/2, enemyBase.y - 25, enemyBase.w * hpPercent, 12);
+
+    mobs.forEach(m => drawStickman(m.x, m.y, false, m.anim));
+    enemies.forEach(e => drawStickman(e.x, e.y, true, e.anim));
+
+    // Player
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(playerX, height - 70, 25, 10, 0, 0, Math.PI*2); ctx.fill();
+    let pGrad = ctx.createRadialGradient(playerX - 10, height - 90, 5, playerX, height - 80, 30);
+    pGrad.addColorStop(0, '#ffffaa'); pGrad.addColorStop(0.3, CONFIG.colors.friend); pGrad.addColorStop(1, '#cc9900');
+    ctx.fillStyle = pGrad; ctx.beginPath(); ctx.arc(playerX, height - 80, 25, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.ellipse(playerX - 10, height - 95, 8, 4, Math.PI/4, 0, Math.PI*2); ctx.fill();
+
+    particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill(); });
+    ctx.globalAlpha = 1.0;
+
+    if(gameState === 'PLAYING') requestAnimationFrame(update);
+    requestAnimationFrame(draw);
+}
+
+// --- EVENT LISTENERS ---
+document.getElementById('startBtn').addEventListener('click', () => {
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('game-hud').classList.remove('hidden');
+    gameState = 'PLAYING';
+    update();
+});
+document.getElementById('nextLevelBtn').addEventListener('click', () => {
+    document.getElementById('win-screen').classList.add('hidden');
+    document.getElementById('game-hud').classList.remove('hidden');
+    level++;
+    document.getElementById('levelDisplay').innerText = "LVL " + level;
+    initLevel(level);
+    gameState = 'PLAYING';
+    update();
+});
+document.getElementById('restartBtn').addEventListener('click', () => {
+    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('game-hud').classList.remove('hidden');
+    initLevel(level);
+    gameState = 'PLAYING';
+    update();
+});
+
+// Shop Button Listeners
+const openShop = () => {
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('win-screen').classList.add('hidden');
+    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('shop-screen').classList.remove('hidden');
+    updateShopUI();
+};
+document.getElementById('shopBtn').addEventListener('click', openShop);
+document.getElementById('shopBtnWin').addEventListener('click', openShop);
+document.getElementById('shopBtnLose').addEventListener('click', openShop);
+
+document.getElementById('shopCloseBtn').addEventListener('click', () => {
+    document.getElementById('shop-screen').classList.add('hidden');
+    // Return to previous screen context roughly
+    if(gameState === 'MENU') document.getElementById('start-screen').classList.remove('hidden');
+    else if(gameState === 'WIN') document.getElementById('win-screen').classList.remove('hidden');
+    else if(gameState === 'GAMEOVER') document.getElementById('game-over-screen').classList.remove('hidden');
+});
+
+document.getElementById('buyFireRate').addEventListener('click', () => buyUpgrade('fireRate'));
+document.getElementById('buySpeed').addEventListener('click', () => buyUpgrade('speed'));
+document.getElementById('buyIncome').addEventListener('click', () => buyUpgrade('income'));
+
+</script>
+</body>
+</html>
